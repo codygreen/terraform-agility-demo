@@ -44,7 +44,7 @@ variable "f5_ami_search_name" {
 
 variable "as3_url" {
   description = "URL for the AS3 RPM"
-  default     = "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.15.0/f5-appsvcs-3.15.0-6.noarch.rpm"
+  default     = "https://github.com/F5Networks/f5-appsvcs-extension/releases/download/v3.13.2/f5-appsvcs-3.13.2-1.noarch.rpm"
 }
 
 variable "do_url" {
