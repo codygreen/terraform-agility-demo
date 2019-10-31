@@ -7,6 +7,5 @@ Deploy the Agility Basic Deployment Pattern using Terraform
 3. Deploy the lab via Terraform:
 ```hcl 
 terraform init
-terraform apply -target tls_private_key.aws -target aws_key_pair.generated_key -target local_file.ssh_udf -target module.vpc -target module.nginx-demo-app -target module.bigip -target module.bigip_sg -target module.bigip_mgmt_sg -target module.demo_app_sg -target aws_secretsmanager_secret_version.bigip-pwd
 terraform apply
 ```
