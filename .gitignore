@@ -7,3 +7,10 @@
 
 # .tfvars files
 *.tfvars
+
+# terraform cli configuration file
+.terraformrc
+terraform.rc
+
+# SSH
+*.pem
