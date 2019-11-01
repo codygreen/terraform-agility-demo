@@ -2,60 +2,60 @@
 # Create IAM Role
 #
 
-data "aws_iam_policy_document" "tf_role" {
-  version = "2012-10-17"
-  statement {
-    actions = [
-      "sts:AssumeRole"
-    ]
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
+data "aws_iam_user" "udf" {
+  user_name = "udf"
 }
 
-resource "aws_iam_role" "tf_role" {
-  name               = format("%s-tf-role", var.prefix)
-  assume_role_policy = data.aws_iam_policy_document.tf_role.json
+resource "aws_iam_policy" "policy" {
+  name = "tf-policy"
 
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateInstanceProfile",
+                "iam:DeleteInstanceProfile",
+                "iam:GetRole",
+                "iam:GetInstanceProfile",
+                "iam:TagRole",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:PutRolePolicy",
+                "iam:AddRoleToInstanceProfile",
+                "iam:ListInstanceProfilesForRole",
+                "iam:PassRole",
+                "iam:DeleteRolePolicy",
+                "iam:GetRolePolicy",
+                "secretsmanager:DeleteSecret",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:PutSecretValue",
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:GetSecretValue"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:role/*",
+                "arn:aws:iam::*:instance-profile/*",
+                "arn:aws:secretsmanager:*:*:secret:*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": "secretsmanager:CreateSecret",
+            "Resource": "*"
+        }
+    ]
+}
+EOF
 }
 
-data "aws_iam_policy_document" "tf_policy" {
-  version = "2012-10-17"
-  statement {
-    actions = [
-      "iam:CreateInstanceProfile",
-      "iam:DeleteInstanceProfile",
-      "iam:GetRole",
-      "iam:GetInstanceProfile",
-      "iam:TagRole",
-      "iam:RemoveRoleFromInstanceProfile",
-      "iam:CreateRole",
-      "iam:DeleteRole",
-      "iam:PutRolePolicy",
-      "iam:AddRoleToInstanceProfile",
-      "iam:ListInstanceProfilesForRole",
-      "iam:PassRole",
-      "iam:DeleteRolePolicy",
-      "iam:GetRolePolicy",
-      "secretsmanager:DeleteSecret",
-      "secretsmanager:DescribeSecret",
-      "secretsmanager:PutSecretValue",
-      "secretsmanager:GetResourcePolicy",
-      "secretsmanager:GetSecretValue"
-    ]
-
-    resources = [
-      "arn:aws:iam::*:role/*",
-      "arn:aws:iam::*:instance-profile/*",
-      aws_secretsmanager_secret.bigip.arn
-    ]
-  }
-}
-
-resource "aws_iam_role_policy" "tf_policy" {
-  name   = format("%s-tf-policy", var.prefix)
-  role   = aws_iam_role.tf_role.id
-  policy = data.aws_iam_policy_document.tf_policy.json
+resource "aws_iam_policy_attachment" "tf" {
+  name       = "tf-attachment"
+  users      = [data.aws_iam_user.udf.user_name]
+  policy_arn = aws_iam_policy.policy.arn
 }

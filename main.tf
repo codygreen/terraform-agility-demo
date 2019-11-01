@@ -141,33 +141,36 @@ module "nginx-demo-app" {
   ec2_instance_count = 2
 }
 
-#
-# Create random password for BIG-IP
-#
-resource "random_password" "password" {
-  length           = 16
-  special          = true
-  override_special = "_%@"
-}
+# Removing until UDF can add correct IAM roles
+# #
+# # Create random password for BIG-IP
+# #
+# resource "random_password" "password" {
+#   length           = 16
+#   special          = true
+#   override_special = "_%@"
+# }
 
-#
-# Create Secret Store and Store BIG-IP Password
-#
-resource "aws_secretsmanager_secret" "bigip" {
-  name = format("%s-bigip-secret-%s", var.prefix, random_id.id.hex)
-}
-resource "aws_secretsmanager_secret_version" "bigip-pwd" {
-  secret_id     = aws_secretsmanager_secret.bigip.id
-  secret_string = random_password.password.result
-}
+# #
+# # Create Secret Store and Store BIG-IP Password
+# #
+# resource "aws_secretsmanager_secret" "bigip" {
+#   name = format("%s-bigip-secret-%s", var.prefix, random_id.id.hex)
+# }
+# resource "aws_secretsmanager_secret_version" "bigip-pwd" {
+#   secret_id     = aws_secretsmanager_secret.bigip.id
+#   secret_string = random_password.password.result
+# }
 
 
 #
 # Create the BIG-IP appliances
 #
 module "bigip" {
-  source  = "f5devcentral/bigip/aws"
-  version = "0.1.2"
+  source = "f5devcentral/bigip/aws"
+  # backing down to 0.1.1 until UDF can add required roles
+  #version = "0.1.2"
+  version = "0.1.1"
 
   prefix = format(
     "%s-bigip-1-nic_with_new_vpc-%s",
