@@ -12,6 +12,25 @@ provider "aws" {
   region = var.region
 }
 
+#	
+# Create the SSH Key	
+#	
+resource "tls_private_key" "aws" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "generated_key" {
+  key_name   = var.ec2_key_name
+  public_key = tls_private_key.aws.public_key_openssh
+}
+
+resource "local_file" "ssh_udf" {
+  content         = tls_private_key.aws.private_key_pem
+  filename        = format("%s/udf.pem", path.module)
+  file_permission = "0600"
+}
+
 #
 # Create a random id
 #
