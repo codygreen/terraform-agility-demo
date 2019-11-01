@@ -177,11 +177,11 @@ module "bigip" {
     var.prefix,
     random_id.id.hex
   )
-  aws_secretmanager_secret_id = aws_secretsmanager_secret.bigip.id
-  f5_instance_count           = length(var.azs)
-  ec2_key_name                = var.ec2_key_name
-  ec2_instance_type           = "m4.large"
-  f5_ami_search_name          = var.f5_ami_search_name
+  # aws_secretmanager_secret_id = aws_secretsmanager_secret.bigip.id
+  f5_instance_count  = length(var.azs)
+  ec2_key_name       = var.ec2_key_name
+  ec2_instance_type  = "m4.large"
+  f5_ami_search_name = var.f5_ami_search_name
   mgmt_subnet_security_group_ids = [
     module.bigip_sg.this_security_group_id,
     module.bigip_mgmt_sg.this_security_group_id
