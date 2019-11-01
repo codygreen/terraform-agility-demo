@@ -10,8 +10,6 @@ terraform {
 #
 provider "aws" {
   region = var.region
-  # access_key = var.AccessKeyID
-  # secret_key = var.SecretAccessKey
 }
 
 #
@@ -19,25 +17,6 @@ provider "aws" {
 #
 resource "random_id" "id" {
   byte_length = 2
-}
-
-#
-# Create the SSH Key
-#
-resource "tls_private_key" "aws" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "aws_key_pair" "generated_key" {
-  key_name   = var.ec2_key_name
-  public_key = tls_private_key.aws.public_key_openssh
-}
-
-resource "local_file" "ssh_udf" {
-  content         = tls_private_key.aws.private_key_pem
-  filename        = format("%s/udf.pem", path.module)
-  file_permission = "0600"
 }
 
 #
@@ -159,30 +138,50 @@ module "nginx-demo-app" {
     module.demo_app_sg.this_security_group_id
   ]
   vpc_subnet_ids     = module.vpc.private_subnets
-  ec2_instance_count = 4
+  ec2_instance_count = 2
 }
+
+#
+# Create random password for BIG-IP
+#
+resource "random_password" "password" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
+}
+
+#
+# Create Secret Store and Store BIG-IP Password
+#
+resource "aws_secretsmanager_secret" "bigip" {
+  name = format("%s-bigip-secret-%s", var.prefix, random_id.id.hex)
+}
+resource "aws_secretsmanager_secret_version" "bigip-pwd" {
+  secret_id     = aws_secretsmanager_secret.bigip.id
+  secret_string = random_password.password.result
+}
+
 
 #
 # Create the BIG-IP appliances
 #
 module "bigip" {
   source  = "f5devcentral/bigip/aws"
-  version = "0.1.1"
+  version = "0.1.2"
 
   prefix = format(
     "%s-bigip-1-nic_with_new_vpc-%s",
     var.prefix,
     random_id.id.hex
   )
-  f5_instance_count = length(var.azs)
-  ec2_key_name      = var.ec2_key_name
-  ec2_instance_type = "m4.large"
+  aws_secretmanager_secret_id = aws_secretsmanager_secret.bigip.id
+  f5_instance_count           = length(var.azs)
+  ec2_key_name                = var.ec2_key_name
+  ec2_instance_type           = "m4.large"
+  f5_ami_search_name          = var.f5_ami_search_name
   mgmt_subnet_security_group_ids = [
     module.bigip_sg.this_security_group_id,
     module.bigip_mgmt_sg.this_security_group_id
   ]
   vpc_mgmt_subnet_ids = module.vpc.public_subnets
-  f5_ami_search_name  = var.f5_ami_search_name
-  AS3_URL             = var.as3_url
-  DO_URL              = var.do_url
 }
